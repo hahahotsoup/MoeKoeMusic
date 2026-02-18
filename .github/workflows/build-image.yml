@@ -1,9 +1,7 @@
-name: Build MoeKoeMusic Docker Image
+name: Build MoeKoeMusic Docker Image for udocker
 
 on:
-  push:
-    branches: [ main ]
-  workflow_dispatch: # 允许手动点一下运行
+  workflow_dispatch:
 
 jobs:
   build:
@@ -13,11 +11,13 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Build Docker image
-        run: docker build -t moekoe:local .
+      - name: Build old Docker format image (compatible with udocker)
+        run: |
+          docker build --format=docker -t moekoe:local .
 
       - name: Save image to tar
-        run: docker save -o moekoe.tar moekoe:local
+        run: |
+          docker save -o moekoe.tar moekoe:local
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
