@@ -1,23 +1,35 @@
 name: Build MoeKoeMusic Docker Image for udocker
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # 允许手动触发
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           submodules: 'recursive'
 
-      - name: Build old Docker format image (compatible with udocker)
-        run: |
-          docker build --format=docker -t moekoe:local .
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Save image to tar
+      - name: Build and push (OCI format)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: moekoe:local
+          outputs: type=oci,dest=./image.oci
+
+      - name: Convert OCI to Docker format
         run: |
-          docker save -o moekoe.tar moekoe:local
+          # 安装 skopeo 工具用于格式转换
+          sudo apt-get update
+          sudo apt-get install -y skopeo
+          # 将 OCI 格式镜像转换为 Docker v2s2 格式并保存为 tar
+          skopeo copy oci-archive:./image.oci docker-archive:./moekoe.tar:moekoe:local
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
