@@ -1,0 +1,26 @@
+name: Build MoeKoeMusic Docker Image
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # 允许手动点一下运行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Build Docker image
+        run: docker build -t moekoe:local .
+
+      - name: Save image to tar
+        run: docker save -o moekoe.tar moekoe:local
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: moekoe-docker-image
+          path: moekoe.tar
